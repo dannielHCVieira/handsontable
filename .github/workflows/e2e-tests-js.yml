@@ -1,0 +1,48 @@
+name: E2E Tests - Puppeteer (JavaScript)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json', 'yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Install dependencies
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn install --frozen-lockfile
+          else
+            npm ci
+          fi
+      
+      - name: Build project
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn build --if-present || true
+          else
+            npm run build --if-present || true
+          fi
+        continue-on-error: true
+      
+      - name: Run E2E Tests
+        run: npm test examples/next/docs/angular/basic-example/spec/Smoke.spec.js examples/next/docs/angular/demo/spec/Smoke.spec.js examples/next/docs/angular-17/basic-example/spec/Smoke.spec.js examples/next/docs/angular-17/demo/spec/Smoke.spec.js examples/next/docs/js/basic-example/spec/Smoke.spec.js examples/next/docs/js/demo/spec/Smoke.spec.js examples/next/docs/react/basic-example/spec/Smoke.spec.js examples/next/docs/react/demo/spec/Smoke.spec.js examples/next/docs/vue/basic-example/spec/Smoke.spec.js examples/next/docs/vue/demo/spec/Smoke.spec.js examples/next/visual-tests/angular/basic-example/spec/Smoke.spec.js examples/next/visual-tests/angular/demo/spec/Smoke.spec.js examples/next/visual-tests/js/basic-example/spec/Smoke.spec.js examples/next/visual-tests/js/demo/spec/Smoke.spec.js examples/next/visual-tests/react/basic-example/spec/Smoke.spec.js examples/next/visual-tests/react/demo/spec/Smoke.spec.js examples/next/visual-tests/vue/basic-example/spec/Smoke.spec.js examples/next/visual-tests/vue/demo/spec/Smoke.spec.js examples/templates/angular/spec/Smoke.spec.js examples/templates/js/spec/Smoke.spec.js examples/templates/react/spec/Smoke.spec.js examples/templates/vue/spec/Smoke.spec.js
